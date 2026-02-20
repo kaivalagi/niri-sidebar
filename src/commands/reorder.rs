@@ -20,6 +20,7 @@ fn resolve_dimensions<C: NiriClient>(window: &Window, ctx: &Ctx<C>) -> WindowTar
 
 fn calculate_coordinates<C: NiriClient>(
     pos: SidebarPosition,
+    reverse: bool,
     dims: WindowTarget,
     screen: (i32, i32),
     stack_offset: i32,
@@ -37,8 +38,8 @@ fn calculate_coordinates<C: NiriClient>(
             let hidden_x = sw - active_peek;
             let x = if state.is_hidden { hidden_x } else { visible_x };
 
-            let start_y = sh - h - margins.bottom;
-            let y = start_y - stack_offset;
+            let start_y = if reverse { margins.top } else { sh - h - margins.bottom };
+            let y = if reverse { start_y + stack_offset } else { start_y - stack_offset };
             (x, y)
         }
         SidebarPosition::Left => {
@@ -46,13 +47,13 @@ fn calculate_coordinates<C: NiriClient>(
             let hidden_x = -w + active_peek;
             let x = if state.is_hidden { hidden_x } else { visible_x };
 
-            let start_y = sh - h - margins.bottom;
-            let y = start_y - stack_offset;
+            let start_y = if reverse { margins.top } else { sh - h - margins.bottom };
+            let y = if reverse { start_y + stack_offset } else { start_y - stack_offset };
             (x, y)
         }
         SidebarPosition::Bottom => {
-            let start_x = margins.left;
-            let x = start_x + stack_offset;
+            let start_x = if reverse { sw - w - margins.right } else { margins.left };
+            let x = if reverse { start_x - stack_offset } else { start_x + stack_offset };
 
             let visible_y = sh - h - margins.bottom;
             let hidden_y = sh - active_peek;
@@ -60,8 +61,8 @@ fn calculate_coordinates<C: NiriClient>(
             (x, y)
         }
         SidebarPosition::Top => {
-            let start_x = margins.left;
-            let x = start_x + stack_offset;
+            let start_x = if reverse { sw - w - margins.right } else { margins.left };
+            let x = if reverse { start_x - stack_offset } else { start_x + stack_offset };
 
             let visible_y = margins.top;
             let hidden_y = -h + active_peek;
@@ -104,6 +105,7 @@ pub fn reorder<C: NiriClient>(ctx: &mut Ctx<C>) -> Result<()> {
     }
 
     let position = ctx.config.interaction.position;
+    let reverse = ctx.config.interaction.reverse_alignment;
     let gap = ctx.config.geometry.gap;
 
     let mut current_stack_offset = 0;
@@ -123,6 +125,7 @@ pub fn reorder<C: NiriClient>(ctx: &mut Ctx<C>) -> Result<()> {
 
         let (target_x, target_y) = calculate_coordinates(
             position,
+            reverse,
             dims,
             (display_w, display_h),
             current_stack_offset,

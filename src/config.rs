@@ -49,6 +49,8 @@ pub struct Interaction {
     pub focus_peek: Option<i32>,
     #[serde(default = "default_position")]
     pub position: SidebarPosition,
+    #[serde(default = "default_reverse_alignment")]
+    pub reverse_alignment: bool,
     #[serde(default = "default_sticky")]
     pub sticky: bool,
 }
@@ -57,6 +59,10 @@ impl Interaction {
     pub fn get_focus_peek(&self) -> i32 {
         self.focus_peek.unwrap_or(self.peek)
     }
+}
+
+fn default_reverse_alignment() -> bool {
+    false
 }
 
 fn default_sticky() -> bool {
